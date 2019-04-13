@@ -6,12 +6,15 @@ import datetime
 import subprocess
 import argparse
 
-import gtk
+import gi
+
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk as gtk
+
 import cairo
 import gobject
 
-from utils import get_selected_window, daemonize, bgra2rgba
-
+from helperutil import get_selected_window, daemonize, bgra2rgba
 
 __version__ = "0.2.1"
 
@@ -84,7 +87,7 @@ class Escrotum(gtk.Window):
                 sys.stdout.flush()
             return True
         if self.delay == 0 and self.countdown:
-            print "."
+            print(".")
 
         if self.selection and not self.xid:
             self.grab()
@@ -108,7 +111,7 @@ class Escrotum(gtk.Window):
 
         # and clear the background
         gc.foreground = gtk.gdk.Color(0, 0, 0, 0)
-        mask.draw_rectangle(gc, True, 2, 2, width-4, height-4)
+        mask.draw_rectangle(gc, True, 2, 2, width - 4, height - 4)
 
         self.shape_combine_mask(mask, 0, 0)
 
@@ -119,8 +122,8 @@ class Escrotum(gtk.Window):
 
         # actualy paint the window
         self.area.window.draw_rectangle(white_gc, True, 0, 0, width, height)
-        self.area.window.draw_rectangle(black_gc, True, 1, 1, width-2,
-                                        height-2)
+        self.area.window.draw_rectangle(black_gc, True, 1, 1, width - 2,
+                                        height - 2)
         self.draw()
 
     def grab(self):
@@ -129,8 +132,8 @@ class Escrotum(gtk.Window):
         """
 
         mask = gtk.gdk.BUTTON_PRESS_MASK | gtk.gdk.BUTTON_RELEASE_MASK | \
-            gtk.gdk.POINTER_MOTION_MASK | gtk.gdk.POINTER_MOTION_HINT_MASK | \
-            gtk.gdk.ENTER_NOTIFY_MASK | gtk.gdk.LEAVE_NOTIFY_MASK
+               gtk.gdk.POINTER_MOTION_MASK | gtk.gdk.POINTER_MOTION_HINT_MASK | \
+               gtk.gdk.ENTER_NOTIFY_MASK | gtk.gdk.LEAVE_NOTIFY_MASK
 
         self.root.set_events(gtk.gdk.BUTTON_PRESS | gtk.gdk.MOTION_NOTIFY |
                              gtk.gdk.BUTTON_RELEASE)
@@ -139,7 +142,7 @@ class Escrotum(gtk.Window):
                                       cursor=gtk.gdk.Cursor(gtk.gdk.CROSSHAIR))
 
         if status != gtk.gdk.GRAB_SUCCESS:
-            print "Can't grab the mouse"
+            print("Can't grab the mouse")
             exit(EXIT_CANT_GRAB_MOUSE)
         gtk.gdk.event_handler_set(self.event_handler)
 
@@ -166,7 +169,7 @@ class Escrotum(gtk.Window):
 
         if event.type == gtk.gdk.BUTTON_PRESS:
             if event.button != 1:
-                print "Canceled by the user"
+                print("Canceled by the user")
                 exit(EXIT_CANCEL)
             # grab the keyboard only when selection started
             gtk.gdk.keyboard_grab(self.root)
@@ -177,7 +180,7 @@ class Escrotum(gtk.Window):
 
         elif event.type == gtk.gdk.KEY_RELEASE:
             if gtk.gdk.keyval_name(event.keyval) == "Escape":
-                print "Canceled by the user"
+                print("Canceled by the user")
                 exit(EXIT_CANCEL)
 
         elif event.type == gtk.gdk.MOTION_NOTIFY:
@@ -243,7 +246,7 @@ class Escrotum(gtk.Window):
         if self.click_selection:
             xid = get_selected_window()
             if not xid:
-                print "Can't get the xid of the selected window"
+                print("Can't get the xid of the selected window")
                 exit(EXIT_XID_ERROR)
             selected_window = gtk.gdk.window_foreign_new(xid)
             width, height = selected_window.get_size()
@@ -261,7 +264,7 @@ class Escrotum(gtk.Window):
         pb2.copy_area(x, y, width, height, pb, 0, 0)
 
         if not pb:
-            print "Invalid Pixbuf"
+            print("Invalid Pixbuf")
             exit(EXIT_INVALID_PIXBUF)
         if self.use_clipboard:
             self.save_clipboard(pb)
@@ -368,9 +371,9 @@ class Escrotum(gtk.Window):
 
         try:
             pb.save(self.filename, filetype)
-            print self.filename
-        except Exception, error:
-            print error
+            print(self.filename)
+        except Exception as error:
+            print(error)
             exit(EXIT_CANT_SAVE_IMAGE)
 
     def call_exec(self, width, height):
@@ -478,7 +481,7 @@ def run():
         exit()
 
     if args.countdown and not args.delay:
-        print "Countdown parameter requires delay"
+        print("Countdown parameter requires delay")
         exit()
 
     Escrotum(filename=args.FILENAME, selection=args.select, xid=args.xid,
@@ -489,8 +492,9 @@ def run():
     try:
         gtk.main()
     except KeyboardInterrupt:
-        print "Canceled by the user"
+        print("Canceled by the user")
         exit(EXIT_CANCEL)
+
 
 if __name__ == "__main__":
     run()

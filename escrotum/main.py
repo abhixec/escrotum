@@ -15,7 +15,7 @@ from gi.repository import GdkPixbuf as Pixbuf
 import cairo
 import gobject
 
-from helperutil import get_selected_window, daemonize, bgra2rgba
+from .util import get_selected_window, daemonize, bgra2rgba
 
 __version__ = "0.2.1"
 

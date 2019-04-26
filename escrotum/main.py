@@ -103,26 +103,29 @@ class Escrotum(gtk.Window):
             return
         width, height = self.root.get_width(), self.root.get_height()
 
-        mask = gdk.Pixmap(None, width, height, 1)
-
-        gc = mask.new_gc()
-
+        # mask = gdk.Pixmap(None, width, height, 1)
+        #mask = gdk.cairo_region_create_from_surface(None, width, height, 1)
+        # mask = cairo.ImageSurface(cairo.FORMAT_ARGB32,width,height)
+        #
+        # gc = mask.new_gc()
+        #
         # draw the rectangle
-        gc.foreground = gdk.Color(0, 0, 0, 1)
-        mask.draw_rectangle(gc, True, 0, 0, width, height)
+        # gc.foreground = gdk.Color(0, 0, 0, 1)
+        mask=gdk.Window.begin_draw_frame(self.root,cairo.Region(cairo.RectangleInt(0,0,width,height)))
+       # mask.draw_rectangle(gc, True, 0, 0, width, height)
 
         # and clear the background
-        gc.foreground = gdk.Color(0, 0, 0, 0)
-        mask.draw_rectangle(gc, True, 2, 2, width - 4, height - 4)
+        # gc.foreground = gdk.Color(0, 0, 0, 0)
+        # mask.draw_rectangle(gc, True, 2, 2, width - 4, height - 4)
 
-        self.shape_combine_mask(mask, 0, 0)
+        #self.shape_combine_mask(mask, 0, 0)
 
     def on_expose(self, widget, event):
-        width, height = self.get_size()
+        width, height = self.get_width(), self.get_height()
         white_gc = self.style.white_gc
         black_gc = self.style.black_gc
 
-        # actualy paint the window
+        # actualy paint thescrotum/main.py:113e window
         self.area.window.draw_rectangle(white_gc, True, 0, 0, width, height)
         self.area.window.draw_rectangle(black_gc, True, 1, 1, width - 2,
                                         height - 2)
@@ -133,17 +136,17 @@ class Escrotum(gtk.Window):
         Grab the mouse
         """
 
-        mask = gdk.BUTTON_PRESS_MASK | gdk.BUTTON_RELEASE_MASK | \
-               gdk.POINTER_MOTION_MASK | gdk.POINTER_MOTION_HINT_MASK | \
-               gdk.ENTER_NOTIFY_MASK | gdk.LEAVE_NOTIFY_MASK
+        mask = gdk.EventMask.BUTTON_PRESS_MASK | gdk.EventMask.BUTTON_RELEASE_MASK | \
+               gdk.EventMask.POINTER_MOTION_MASK | gdk.EventMask.POINTER_MOTION_HINT_MASK | \
+               gdk.EventMask.ENTER_NOTIFY_MASK | gdk.EventMask.LEAVE_NOTIFY_MASK
 
-        self.root.set_events(gdk.BUTTON_PRESS | gdk.MOTION_NOTIFY |
-                             gdk.BUTTON_RELEASE)
+        self.root.set_events(gdk.EventMask.BUTTON_PRESS_MASK | gdk.EventMask.POINTER_MOTION_HINT_MASK |
+                             gdk.EventMask.BUTTON_RELEASE_MASK)
 
-        status = gdk.pointer_grab(self.root, event_mask=mask,
-                                      cursor=gdk.Cursor(gdk.CROSSHAIR))
+        status = gdk.pointer_grab(self.root, False, mask, None,
+                                      gdk.Cursor(gdk.CursorType.CROSSHAIR),0)
 
-        if status != gdk.GRAB_SUCCESS:
+        if status != gdk.GrabStatus.SUCCESS:
             print("Can't grab the mouse")
             exit(EXIT_CANT_GRAB_MOUSE)
         gdk.event_handler_set(self.event_handler)
@@ -153,7 +156,7 @@ class Escrotum(gtk.Window):
         Ungrab the mouse and keyboard
         """
 
-        self.root.set_events(())
+        self.root.set_events(gdk.EventMask.LEAVE_NOTIFY_MASK)
         gdk.pointer_ungrab()
         gdk.keyboard_ungrab()
 
@@ -169,23 +172,24 @@ class Escrotum(gtk.Window):
         Handle mouse events
         """
 
-        if event.type == gdk.BUTTON_PRESS:
-            if event.button != 1:
+        if event.type == gdk.EventType.BUTTON_PRESS:
+            if event.button.button != 1:
                 print("Canceled by the user")
+
                 exit(EXIT_CANCEL)
             # grab the keyboard only when selection started
-            gdk.keyboard_grab(self.root)
+            gdk.keyboard_grab(self.root,False,0)
             self.started = True
             self.start_x = int(event.x)
             self.start_y = int(event.y)
             self.move(self.x, self.y)
 
-        elif event.type == gdk.KEY_RELEASE:
+        elif event.type == gdk.EventType.KEY_RELEASE:
             if gdk.keyval_name(event.keyval) == "Escape":
                 print("Canceled by the user")
                 exit(EXIT_CANCEL)
 
-        elif event.type == gdk.MOTION_NOTIFY:
+        elif event.type == gdk.EventType.MOTION_NOTIFY:
             if not self.started:
                 return
 
@@ -197,7 +201,7 @@ class Escrotum(gtk.Window):
                 self.move(self.x, self.y)
                 self.show_all()
 
-        elif event.type == gdk.BUTTON_RELEASE:
+        elif event.type == gdk.EventType.BUTTON_RELEASE:
             if not self.started:
                 return
 
